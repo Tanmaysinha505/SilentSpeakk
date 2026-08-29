@@ -1,0 +1,34 @@
+[
+  {
+    "id": "custom_spotify",
+    "name": "Rock-On -> Open Spotify",
+    "gesture": "ROCK_ON",
+    "action_type": "app",
+    "target": "spotify",
+    "description": "Opens Spotify music player"
+  },
+  {
+    "id": "custom_screenshot",
+    "name": "Peace -> Take Screenshot",
+    "gesture": "TWO_FINGERS",
+    "action_type": "system",
+    "target": "screenshot",
+    "description": "Saves full screen screenshot"
+  },
+  {
+    "id": "custom_lock",
+    "name": "Thumb Up -> Lock Workstation",
+    "gesture": "THUMB_UP",
+    "action_type": "system",
+    "target": "lock",
+    "description": "Instantly locks computer"
+  },
+  {
+    "id": "custom_terminal",
+    "name": "Three Fingers -> Open Terminal",
+    "gesture": "THREE_FINGERS",
+    "action_type": "app",
+    "target": "terminal",
+    "description": "Launches Windows Terminal / PowerShell"
+  }
+]
