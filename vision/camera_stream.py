@@ -59,7 +59,6 @@ class CameraStream:
     def _open_capture(self) -> bool:
         """Attempts to open the video capture device."""
         if not config_mgr.get("camera", {}).get("enabled", True):
-            logger.info("Webcam capture disabled in config (Running in Native OS Hardware Driver mode)")
             self._connected = False
             return False
 
@@ -141,9 +140,9 @@ class CameraStream:
                     self.frame_time = time.time()
                     self.fps = 30.0
 
-                # Periodically attempt reconnect if hardware camera is wanted
+                # Periodically attempt reconnect if hardware camera is enabled in config
                 time.sleep(0.033)
-                if int(time.time()) % 3 == 0 and not self._connected:
+                if config_mgr.get("camera", {}).get("enabled", True) and int(time.time()) % 3 == 0 and not self._connected:
                     self._open_capture()
 
     def _generate_synthetic_frame(self) -> np.ndarray:
