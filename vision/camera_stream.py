@@ -146,24 +146,14 @@ class CameraStream:
                     self._open_capture()
 
     def _generate_synthetic_frame(self) -> np.ndarray:
-        """Generates a standby frame when webcam is disconnected."""
+        """Generates a calm standby frame when webcam is managed by browser."""
         img = np.zeros((self.height, self.width, 3), dtype=np.uint8)
-        # Gradient background
-        for y in range(self.height):
-            c = int(20 + 20 * (y / self.height))
-            img[y, :, :] = (c + 10, c, c)
+        img[:, :] = (18, 14, 10) # Smooth solid dark background
 
-        # Pulse animation
-        t = time.time()
-        pulse = int(128 + 127 * np.sin(t * 3))
-        color = (pulse, 180, 0)
-
-        cv2.putText(img, "AirOS Camera Standby", (self.width // 2 - 170, self.height // 2 - 20),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 240, 255), 2, cv2.LINE_AA)
-        status_text = "Searching for webcam..." if not self._connected else "Ready"
-        cv2.putText(img, status_text, (self.width // 2 - 110, self.height // 2 + 25),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (180, 180, 180), 1, cv2.LINE_AA)
-        cv2.circle(img, (self.width // 2, self.height // 2 + 70), 10, color, -1)
+        cv2.putText(img, "AirOS Engine Active", (self.width // 2 - 130, self.height // 2 - 15),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.85, (0, 240, 255), 2, cv2.LINE_AA)
+        cv2.putText(img, "Webcam Active in Browser (60 FPS MediaPipe)", (self.width // 2 - 200, self.height // 2 + 25),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.55, (180, 180, 180), 1, cv2.LINE_AA)
         return img
 
     def get_frame(self) -> Tuple[bool, Optional[np.ndarray], float]:

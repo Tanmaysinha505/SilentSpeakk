@@ -9,7 +9,6 @@ import { AgenticSentenceCard } from './components/hud/AgenticSentenceCard';
 import { InModeLearner } from './components/learning/InModeLearner';
 
 import { RoomControlView } from './components/modes/RoomControlView';
-import { DesktopModeView } from './components/modes/DesktopModeView';
 import { ClassroomView } from './components/modes/ClassroomView';
 import { LibraryView } from './components/modes/LibraryView';
 import { HospitalView } from './components/modes/HospitalView';
@@ -19,10 +18,16 @@ import { CustomLearningView } from './components/modes/CustomLearningView';
 
 import { inBrowserHandDetector } from './services/handDetector';
 import { useAgent44Store } from './store/useAgent44Store';
+import { useCommandStore } from './store/useCommandStore';
+import { useAuthStore } from './store/useAuthStore';
+import { LoginPage } from './components/auth/LoginPage';
+import { firebaseService } from './services/firebase';
 
 // Master Agent 44 Application Interface
 export function App() {
+  const currentUser = useAuthStore((s) => s.currentUser);
   const activeMode = useAgent44Store((s) => s.activeMode);
+  const setActiveMode = useAgent44Store((s) => s.setActiveMode);
   const [isSimulatorOpen, setIsSimulatorOpen] = useState(false);
   const [isLearnerOpen, setIsLearnerOpen] = useState(false);
 
@@ -31,20 +36,58 @@ export function App() {
     inBrowserHandDetector.init().catch(console.warn);
   }, []);
 
+  // Real-time listener for ESP32 DHT11 temperature & humidity sensors
+  useEffect(() => {
+    const unsub = firebaseService.subscribeSensors((sensorData) => {
+      if (sensorData) {
+        useCommandStore.getState().setSensors(sensorData);
+      }
+    });
+    return () => {
+      if (typeof unsub === 'function') unsub();
+    };
+  }, []);
+
+  // Real-time listener for ESP32 PIR motion presence (agent44/presence/motionDetected)
+  useEffect(() => {
+    const unsub = firebaseService.subscribeMotionPresence((motionDetected) => {
+      useCommandStore.getState().setPresence(motionDetected);
+      useAgent44Store.getState().setPresence(motionDetected);
+    });
+    return () => {
+      if (typeof unsub === 'function') unsub();
+    };
+  }, []);
+
+  // Real-time listener for ESP32 hardware device states (agent44/room)
+  useEffect(() => {
+    const unsub = firebaseService.subscribeHardwareState((hwState) => {
+      if (hwState) {
+        useCommandStore.getState().syncHardwareState(hwState);
+      }
+    });
+    return () => {
+      if (typeof unsub === 'function') unsub();
+    };
+  }, []);
+
+  // 0. Render Login Page if user is not authenticated
+  if (!currentUser) {
+    return <LoginPage />;
+  }
+
   return (
     <div className="agent44-app-container">
-      {/* 1. Full Screen Main Viewport Layer (3D Room, Desktop OS, or Camera Feed) */}
+      {/* 1. Full Screen Main Viewport Layer (3D Room or Camera Feed) */}
       <div className="main-viewport-layer">
         {activeMode === 'ROOM_CONTROL' ? (
           <RoomControlView onOpenLearner={() => setIsLearnerOpen(true)} />
-        ) : activeMode === 'DESKTOP' ? (
-          <DesktopModeView onOpenLearner={() => setIsLearnerOpen(true)} />
         ) : (
           <CameraFeed />
         )}
       </div>
 
-      {/* 2. Mode Content Overlays (for classroom, library, hospital, comms, space, custom) */}
+      {/* 2. Mode Content Overlays */}
       <div className="mode-overlay-layer">
         {activeMode === 'CLASSROOM' && <ClassroomView onOpenLearner={() => setIsLearnerOpen(true)} />}
         {activeMode === 'LIBRARY' && <LibraryView onOpenLearner={() => setIsLearnerOpen(true)} />}
@@ -59,11 +102,13 @@ export function App() {
         {/* Top Navigation & Status Bar */}
         <TopBar onOpenSimulator={() => setIsSimulatorOpen(true)} />
 
-        {/* Agentic AI Sequence-to-Sentence Synthesizer Banner */}
-        <AgenticSentenceCard />
-
-        {/* Gesture Status Panel (Detected Gesture, Searching/Stabilizing/Confirmed, Confidence, Intent) */}
-        <GestureStatusPanel />
+        {/* Global HUD Cards for Non-3D Modes (RoomControlView manages its own single left HUD column) */}
+        {activeMode !== 'ROOM_CONTROL' && (
+          <>
+            <AgenticSentenceCard />
+            <GestureStatusPanel />
+          </>
+        )}
 
         {/* Action Feedback Non-Blocking Notification Toasts */}
         <ActionToasts />

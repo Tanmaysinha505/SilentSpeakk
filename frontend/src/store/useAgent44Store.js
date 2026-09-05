@@ -1,6 +1,7 @@
 import { create } from 'zustand';
-import { audioFeedback } from '../services/audioFeedback';
-import { useCommandStore } from './useCommandStore';
+import { audioFeedback } from '../services/audioFeedback.js';
+import { useCommandStore } from './useCommandStore.js';
+import { useFirebaseStore } from './useFirebaseStore.js';
 
 const MAX_TOASTS = 5;
 
@@ -8,6 +9,13 @@ export const useAgent44Store = create((set, get) => ({
   // --- Active Operational Mode ---
   // Modes: 'ROOM_CONTROL' | 'LIBRARY' | 'HOSPITAL' | 'COMMUNICATION' | 'SPACE' | 'CUSTOM'
   activeMode: 'ROOM_CONTROL',
+
+  // --- Agent 44 Presence State (Inactive during hardware test phase) ---
+  presence: {
+    motionDetected: true,
+    status: 'ACTIVE',
+    lastChangedAt: null,
+  },
 
   // --- Gesture Stability & Temporal State ---
   tracking: {
@@ -106,6 +114,11 @@ export const useAgent44Store = create((set, get) => ({
     get().addToast(`Switched to ${mode.replace(/_/g, ' ')} Mode`, 'info');
     audioFeedback.playTone(620, 'sine', 0.1, 0.05);
 
+    // Save active mode to Cloud Firestore under users/{userId}/profile/settings
+    try {
+      useFirebaseStore.getState().saveMode(mode);
+    } catch (e) {}
+
     // If connected to Python backend, notify it
     if (typeof window !== 'undefined' && window.__agent44_ws && window.__agent44_ws.readyState === WebSocket.OPEN) {
       window.__agent44_ws.send(JSON.stringify({ command: 'set_mode', mode }));
@@ -164,13 +177,26 @@ export const useAgent44Store = create((set, get) => ({
     }
   },
 
+  setPresence: (motionDetected) => {
+    // Inactive during ESP32 hardware testing phase - system remains 100% active
+    set((s) => ({
+      presence: {
+        motionDetected: Boolean(motionDetected),
+        status: 'ACTIVE',
+        lastChangedAt: Date.now()
+      }
+    }));
+  },
+
   /**
-   * Dispatches command to Virtual Smart Room (React Three Fiber)
+   * Dispatches command to Virtual Smart Room (React Three Fiber) & Firebase Realtime Database
    */
-  dispatchRoomCommand: (command) => {
-    const res = useCommandStore.getState().dispatchCommand(command, { source: 'Agent 44 Vision Engine' });
-    if (res && res.message) {
+  dispatchRoomCommand: (command, meta = {}) => {
+    console.log('[Flow 2/4 - useAgent44Store] dispatchRoomCommand called for:', command, 'meta:', meta);
+    const res = useCommandStore.getState().dispatchCommand(command, { source: 'Agent 44 Vision Engine', ...meta });
+    if (res && res.message && !res.noop) {
       get().addToast(res.message, res.success ? 'success' : 'warning');
     }
+    return res;
   }
 }));

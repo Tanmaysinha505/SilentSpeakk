@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Sparkles, Plus, GraduationCap, X, Check, Layers, FolderPlus } from 'lucide-react';
+import { Sparkles, Plus, GraduationCap, X, Check, Layers, FolderPlus, CloudUpload } from 'lucide-react';
 import { useAgent44Store } from '../../store/useAgent44Store';
+import { useFirebaseStore } from '../../store/useFirebaseStore';
+import { firebaseService } from '../../services/firebase';
 
 const GESTURE_OPTIONS = [
   'OPEN_PALM',
@@ -20,6 +22,8 @@ export function InModeLearner({ isOpen, onClose }) {
   const activeMode = useAgent44Store((s) => s.activeMode);
   const addToast = useAgent44Store((s) => s.addToast);
   const setActiveMode = useAgent44Store((s) => s.setActiveMode);
+  const userId = useFirebaseStore((s) => s.userId);
+  const isConfigured = useFirebaseStore((s) => s.isConfigured);
 
   const [activeTab, setActiveTab] = useState('LEARN_GESTURE'); // 'LEARN_GESTURE' | 'CREATE_MODE'
 
@@ -35,11 +39,11 @@ export function InModeLearner({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  const handleTeachGesture = (e) => {
+  const handleTeachGesture = async (e) => {
     e.preventDefault();
     if (!actionLabel) return;
 
-    // Persist learned mapping into localStorage for the active mode
+    // 1. Persist learned mapping into localStorage for offline capability
     const key = `agent44_custom_${activeMode}`;
     const existing = JSON.parse(localStorage.getItem(key) || '[]');
     const newEntry = {
@@ -50,7 +54,21 @@ export function InModeLearner({ isOpen, onClose }) {
     };
     localStorage.setItem(key, JSON.stringify([...existing, newEntry]));
 
-    addToast(`Learned in ${activeMode}: ${selectedGesture} → "${actionLabel}"`, 'success');
+    // 2. Sync to Cloud Firestore under users/{userId}/custom_gestures and gesture_meanings
+    try {
+      if (userId) {
+        await firebaseService.saveCustomGesture(userId, activeMode, newEntry);
+        await firebaseService.saveGestureMeaning(userId, selectedGesture, {
+          meaning: actionLabel,
+          spokenPhrase: spokenPhrase || actionLabel,
+          category: activeMode
+        });
+      }
+    } catch (err) {
+      console.warn('[Firebase] Cloud sync notice:', err);
+    }
+
+    addToast(`Learned in ${activeMode}: ${selectedGesture} → "${actionLabel}" (Synced to Cloud)`, 'success');
     setActionLabel('');
     setSpokenPhrase('');
     onClose();

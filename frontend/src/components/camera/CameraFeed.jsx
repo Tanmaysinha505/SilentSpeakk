@@ -91,24 +91,30 @@ export function CameraFeed() {
           const results = inBrowserHandDetector.detectVideoFrame(video, now);
 
           if (results && results.landmarks && results.landmarks.length > 0) {
-            const handLandmarks = results.landmarks[0];
-
-            // Render skeletal mesh on canvas
+            // Render skeletal mesh on canvas for all detected hands
             if (canvasRef.current && showLandmarks) {
-              drawLandmarks([handLandmarks]);
+              drawLandmarks(results.landmarks);
             }
 
-            // Classify gesture geometry (OPEN_PALM, FIST, POINT_UP, etc.)
             const activeMode = useAgent44Store.getState().activeMode;
-            const { gesture, confidence } = classifyHandGesture(handLandmarks, activeMode);
+            let bestGesture = { gesture: 'NONE', confidence: 0 };
+            let bestHandLms = results.landmarks[0];
+
+            for (const lms of results.landmarks) {
+              const res = classifyHandGesture(lms, activeMode);
+              if (res.gesture !== 'NONE' && res.confidence > bestGesture.confidence) {
+                bestGesture = res;
+                bestHandLms = lms;
+              }
+            }
 
             // Feed index fingertip into smooth cursor controller
-            if (handLandmarks[8]) {
-              cursorController.updateFromLandmark(handLandmarks[8]);
+            if (bestHandLms[8]) {
+              cursorController.updateFromLandmark(bestHandLms[8]);
             }
 
             // Ingest into temporal smoothing & majority voting engine
-            gestureProcessor.processFrame(gesture, confidence, handLandmarks, currentFps);
+            gestureProcessor.processFrame(bestGesture.gesture, bestGesture.confidence, bestHandLms, currentFps);
           } else {
             // No hand currently detected
             if (canvasRef.current) {

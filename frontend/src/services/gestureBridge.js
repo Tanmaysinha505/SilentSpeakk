@@ -13,7 +13,7 @@ class GestureBridgeService {
     this.reconnectTimer = null;
     this.lastTriggeredGesture = null;
     this.lastTriggeredTime = 0;
-    this.cooldownMs = 1200; // Debounce cooldown between discrete gestures
+    this.cooldownMs = 1800; // 1.8s cooldown protection between discrete gestures
     this.isListening = false;
     this.externalListeners = new Set();
   }

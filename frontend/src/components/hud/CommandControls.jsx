@@ -6,7 +6,8 @@ import {
   DoorClosed,
   Tv,
   Power,
-  Sliders
+  Sliders,
+  Wind
 } from 'lucide-react';
 import { useCommandStore } from '../../store/useCommandStore';
 
@@ -15,6 +16,7 @@ export function CommandControls() {
   const fan = useCommandStore((s) => s.fan);
   const door = useCommandStore((s) => s.door);
   const tv = useCommandStore((s) => s.tv);
+  const ac = useCommandStore((s) => s.ac || { on: true, temp: 24 });
   const dispatchCommand = useCommandStore((s) => s.dispatchCommand);
 
   return (
@@ -68,7 +70,7 @@ export function CommandControls() {
             <div className="tile-meta">
               <div className="tile-title">Ceiling Fan</div>
               <div className="tile-status-tag">
-                {fan.on ? 'AERODYNAMIC SPIN' : 'STATIONARY'}
+                {fan.on ? 'SPINNING' : 'STOPPED'}
               </div>
             </div>
           </div>
@@ -101,26 +103,33 @@ export function CommandControls() {
               )}
             </div>
             <div className="tile-meta">
-              <div className="tile-title">Smart Door</div>
+              <div className="tile-title">Smart Door (Servo)</div>
               <div className="tile-status-tag">
-                {door.open ? 'OPEN (83° HINGED)' : 'SECURED & LATCHED'}
+                {door.open ? 'OPEN (SERVO: 83°)' : 'SECURED & LATCHED'}
               </div>
             </div>
           </div>
           <div className="tile-btn-row">
             <button
+              className="action-btn btn-engaged"
+              onClick={() => dispatchCommand('DOOR_TOGGLE', { gesture: 'OK_SIGN' })}
+              aria-label="Toggle Smart Door"
+            >
+              👌 TOGGLE
+            </button>
+            <button
               className={`action-btn ${door.open ? 'btn-engaged' : ''}`}
               onClick={() => dispatchCommand('DOOR_OPEN')}
               aria-label="Open Smart Door"
             >
-              DOOR_OPEN
+              OPEN
             </button>
             <button
               className={`action-btn ${!door.open ? 'btn-engaged' : ''}`}
               onClick={() => dispatchCommand('DOOR_CLOSE')}
               aria-label="Close Smart Door"
             >
-              DOOR_CLOSE
+              CLOSE
             </button>
           </div>
         </div>
@@ -160,6 +169,41 @@ export function CommandControls() {
               aria-label="Switch TV Channel"
             >
               CH+
+            </button>
+          </div>
+        </div>
+
+        {/* --- SMART CLIMATE AC CONTROL --- */}
+        <div className={`command-tile ${ac.on ? 'active-ac' : ''}`}>
+          <div className="tile-top">
+            <div className="tile-icon-box">
+              <Wind size={20} className={ac.on ? 'text-cyan spin-anim glow-icon' : 'text-muted'} />
+            </div>
+            <div className="tile-meta">
+              <div className="tile-title">Digital Twin AC</div>
+              <div className="tile-status-tag">
+                {ac.on ? `COOLING (${ac.temp}°C)` : 'STANDBY'}
+              </div>
+            </div>
+          </div>
+          <div className="tile-btn-row">
+            <button
+              className={`action-btn ${ac.on ? 'btn-engaged' : ''}`}
+              onClick={() => dispatchCommand(ac.on ? 'AC_OFF' : 'AC_ON')}
+            >
+              {ac.on ? 'AC_OFF' : 'AC_ON'}
+            </button>
+            <button
+              className="action-btn"
+              onClick={() => dispatchCommand('TEMP_DOWN')}
+            >
+              -1°C
+            </button>
+            <button
+              className="action-btn"
+              onClick={() => dispatchCommand('TEMP_UP')}
+            >
+              +1°C
             </button>
           </div>
         </div>

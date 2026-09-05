@@ -9,6 +9,8 @@ import {
   ThumbsUp,
   ThumbsDown,
   Tv,
+  DoorOpen,
+  DoorClosed,
   Code2,
   Check
 } from 'lucide-react';
@@ -23,6 +25,8 @@ const GESTURE_ICONS = {
   ThumbsUp,
   ThumbsDown,
   Tv,
+  DoorOpen,
+  DoorClosed,
   Sparkles
 };
 

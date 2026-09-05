@@ -1,0 +1,59 @@
+warning: in the working copy of 'control/mouse_controller.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/package-lock.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/App.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/camera/CameraFeed.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/camera/PIPCameraFeed.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/hud/CommandControls.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/hud/GestureSimulatorModal.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/hud/GestureStatusPanel.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/hud/ModeSelector.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/hud/TopBar.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/learning/InModeLearner.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/modes/RoomControlView.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/scene/CameraController.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/scene/RoomCanvas.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/scene/SmartAC.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/index.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/services/agenticSynthesizer.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/services/gestureBridge.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/services/gestureMapper.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/services/gestureProcessor.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/services/handDetector.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/store/useAgent44Store.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/store/useCommandStore.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'main.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ui/server.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ui/static/index.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'vision/camera_stream.py', LF will be replaced by CRLF the next time Git touches it
+ airos_config.json                                  |     6 [32m+[m[31m-[m
+ control/mouse_controller.py                        |     7 [32m+[m[31m-[m
+ frontend/package-lock.json                         | 11476 [32m+++++++++++++++++[m[31m--[m
+ frontend/package.json                              |     2 [32m+[m
+ frontend/src/App.jsx                               |    65 [32m+[m[31m-[m
+ frontend/src/components/camera/CameraFeed.jsx      |    24 [32m+[m[31m-[m
+ frontend/src/components/camera/PIPCameraFeed.jsx   |    23 [32m+[m[31m-[m
+ frontend/src/components/hud/CommandControls.jsx    |    56 [32m+[m[31m-[m
+ .../src/components/hud/GestureSimulatorModal.jsx   |     4 [32m+[m
+ frontend/src/components/hud/GestureStatusPanel.jsx |     5 [32m+[m[31m-[m
+ frontend/src/components/hud/ModeSelector.jsx       |    11 [32m+[m[31m-[m
+ frontend/src/components/hud/TopBar.jsx             |    72 [32m+[m[31m-[m
+ frontend/src/components/learning/InModeLearner.jsx |    26 [32m+[m[31m-[m
+ frontend/src/components/modes/DesktopModeView.jsx  |   213 [31m-[m
+ frontend/src/components/modes/RoomControlView.jsx  |   368 [32m+[m[31m-[m
+ frontend/src/components/scene/CameraController.jsx |    85 [32m+[m[31m-[m
+ frontend/src/components/scene/RoomCanvas.jsx       |    79 [32m+[m[31m-[m
+ frontend/src/components/scene/SmartAC.jsx          |    31 [32m+[m[31m-[m
+ frontend/src/index.css                             |  1245 [32m+[m[31m-[m
+ frontend/src/services/agenticSynthesizer.js        |    29 [32m+[m[31m-[m
+ frontend/src/services/gestureBridge.js             |     2 [32m+[m[31m-[m
+ frontend/src/services/gestureMapper.js             |    68 [32m+[m[31m-[m
+ frontend/src/services/gestureProcessor.js          |   388 [32m+[m[31m-[m
+ frontend/src/services/handDetector.js              |    54 [32m+[m[31m-[m
+ frontend/src/store/useAgent44Store.js              |    38 [32m+[m[31m-[m
+ frontend/src/store/useCommandStore.js              |   815 [32m+[m[31m-[m
+ main.py                                            |     8 [32m+[m
+ ui/server.py                                       |    61 [32m+[m[31m-[m
+ ui/static/index.html                               |     4 [32m+[m[31m-[m
+ vision/camera_stream.py                            |    24 [32m+[m[31m-[m
+ 30 files changed, 12493 insertions(+), 2796 deletions(-)

@@ -43,16 +43,23 @@ export function getExtendedFingers(landmarks) {
 
   const wrist = landmarks[WRIST];
 
-  // A finger is extended if TIP distance from wrist is significantly greater than PIP distance from wrist
-  const indexExt = euclideanDist(wrist, landmarks[INDEX_TIP]) > euclideanDist(wrist, landmarks[INDEX_PIP]) * 1.15;
-  const middleExt = euclideanDist(wrist, landmarks[MIDDLE_TIP]) > euclideanDist(wrist, landmarks[MIDDLE_PIP]) * 1.15;
-  const ringExt = euclideanDist(wrist, landmarks[RING_TIP]) > euclideanDist(wrist, landmarks[RING_PIP]) * 1.15;
-  const pinkyExt = euclideanDist(wrist, landmarks[PINKY_TIP]) > euclideanDist(wrist, landmarks[PINKY_PIP]) * 1.15;
+  // A finger is extended if tip is higher than PIP in camera frame or significantly farther from wrist
+  const indexExt = (landmarks[INDEX_TIP].y < landmarks[INDEX_PIP].y) ||
+    (euclideanDist(wrist, landmarks[INDEX_TIP]) > euclideanDist(wrist, landmarks[INDEX_PIP]) * 1.10);
 
-  // Thumb extension check: distance between thumb tip and pinky MCP vs thumb IP and pinky MCP
+  const middleExt = (landmarks[MIDDLE_TIP].y < landmarks[MIDDLE_PIP].y) ||
+    (euclideanDist(wrist, landmarks[MIDDLE_TIP]) > euclideanDist(wrist, landmarks[MIDDLE_PIP]) * 1.10);
+
+  const ringExt = (landmarks[RING_TIP].y < landmarks[RING_PIP].y) &&
+    (euclideanDist(wrist, landmarks[RING_TIP]) > euclideanDist(wrist, landmarks[RING_PIP]) * 1.12);
+
+  const pinkyExt = (landmarks[PINKY_TIP].y < landmarks[PINKY_PIP].y) &&
+    (euclideanDist(wrist, landmarks[PINKY_TIP]) > euclideanDist(wrist, landmarks[PINKY_PIP]) * 1.12);
+
+  // Thumb extension check
   const thumbTipDist = euclideanDist(landmarks[THUMB_TIP], landmarks[PINKY_MCP]);
   const thumbIpDist = euclideanDist(landmarks[THUMB_IP], landmarks[PINKY_MCP]);
-  const thumbExt = thumbTipDist > thumbIpDist * 1.12;
+  const thumbExt = thumbTipDist > thumbIpDist * 1.10;
 
   return {
     thumb: thumbExt,
@@ -115,7 +122,7 @@ export function classifyHandGesture(landmarks, currentMode = '') {
       }
     }
 
-    // For DESKTOP, ROOM_CONTROL, CLASSROOM, etc. — always INDEX_POINT!
+    // For ROOM_CONTROL, CLASSROOM, etc. — always INDEX_POINT!
     return { gesture: 'INDEX_POINT', confidence: 95 };
   }
 
@@ -138,14 +145,29 @@ export function classifyHandGesture(landmarks, currentMode = '') {
   }
 
   // 6. ROCK_ON: Index and Pinky extended, Middle and Ring curled
-  if (ext.index && ext.pinky && !ext.middle && !ext.ring) {
+  if (ext.index && ext.pinky && !ext.middle && !ext.ring && !ext.thumb) {
     return { gesture: 'ROCK_ON', confidence: 90 };
   }
 
-  // 7. OK_SIGN: Thumb and Index touching (pinch), other 3 fingers extended
+  // 7. CALL / SHAKA: Thumb and Pinky extended, Index, Middle, Ring curled
+  if (ext.thumb && ext.pinky && !ext.index && !ext.middle && !ext.ring) {
+    return { gesture: 'CALL', confidence: 92 };
+  }
+
+  // 8. THREE_FINGERS: Index, Middle, and Ring extended, Pinky curled
+  if (ext.index && ext.middle && ext.ring && !ext.pinky) {
+    return { gesture: 'THREE_FINGERS', confidence: 91 };
+  }
+
+  // 9. OK_SIGN: Thumb and Index touching (pinch), other fingers extended
   const thumbIndexDist = euclideanDist(landmarks[THUMB_TIP], landmarks[INDEX_TIP]);
-  if (thumbIndexDist < 0.075 && ext.middle && ext.ring && ext.pinky) {
-    return { gesture: 'OK_SIGN', confidence: 91 };
+  if (thumbIndexDist < 0.085 && (ext.middle && ext.ring)) {
+    return { gesture: 'OK_SIGN', confidence: 93 };
+  }
+
+  // 10. PINCH: Thumb and Index touching close, other fingers curled
+  if (thumbIndexDist < 0.085 && !ext.middle && !ext.ring && !ext.pinky) {
+    return { gesture: 'PINCH', confidence: 92 };
   }
 
   // Default fallback if pose is indeterminate
@@ -230,7 +252,13 @@ class InBrowserHandDetector {
     }
 
     try {
-      const results = this.handLandmarker.detectForVideo(videoElement, timestamp);
+      let ts = Math.round(timestamp);
+      if (this.lastTimestamp !== undefined && ts <= this.lastTimestamp) {
+        ts = this.lastTimestamp + 1;
+      }
+      this.lastTimestamp = ts;
+
+      const results = this.handLandmarker.detectForVideo(videoElement, ts);
       return results;
     } catch (err) {
       return null;

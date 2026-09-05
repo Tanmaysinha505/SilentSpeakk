@@ -366,18 +366,44 @@ async def get_api_status():
     return {"status": "online", "pyautogui": True, "os": "windows"}
 
 
+def ensure_interactive_desktop():
+    """Attaches current thread to user's interactive desktop to allow hardware input manipulation."""
+    try:
+        user32 = ctypes.windll.user32
+        hDesk = user32.OpenInputDesktop(0, False, 0x01FF)
+        if hDesk:
+            user32.SetThreadDesktop(hDesk)
+    except Exception:
+        pass
+
+
 @app.post("/api/control/move")
 async def control_move(req: CursorMoveRequest):
-    """Physically moves the real Windows operating system cursor using SetCursorPos / PyAutoGUI."""
+    """Physically moves the real Windows operating system cursor using SetCursorPos and hardware mouse_event."""
     try:
+        ensure_interactive_desktop()
+        user32 = ctypes.windll.user32
+        screen_w = user32.GetSystemMetrics(0) or 1920
+        screen_h = user32.GetSystemMetrics(1) or 1080
+
         if req.x is not None and req.y is not None:
-            ctypes.windll.user32.SetCursorPos(int(req.x), int(req.y))
+            tx = int(req.x)
+            ty = int(req.y)
         elif req.norm_x is not None and req.norm_y is not None:
-            screen_w, screen_h = pyautogui.size()
-            target_x = max(0, min(screen_w - 1, int(req.norm_x * screen_w)))
-            target_y = max(0, min(screen_h - 1, int(req.norm_y * screen_h)))
-            ctypes.windll.user32.SetCursorPos(target_x, target_y)
-        return {"success": True}
+            tx = max(0, min(screen_w - 1, int(req.norm_x * screen_w)))
+            ty = max(0, min(screen_h - 1, int(req.norm_y * screen_h)))
+        else:
+            return {"success": False, "error": "No coordinates"}
+
+        # 1. Native SetCursorPos
+        user32.SetCursorPos(tx, ty)
+
+        # 2. Hardware absolute mouse_event injection (works across all apps & DPI scaling)
+        abs_x = int(tx * 65535 / (screen_w - 1)) if screen_w > 1 else 0
+        abs_y = int(ty * 65535 / (screen_h - 1)) if screen_h > 1 else 0
+        user32.mouse_event(0x8001, abs_x, abs_y, 0, 0) # MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE
+
+        return {"success": True, "x": tx, "y": ty}
     except Exception as e:
         return {"success": False, "error": str(e)}
 
@@ -386,10 +412,14 @@ async def control_move(req: CursorMoveRequest):
 async def control_click(req: ClickRequest):
     """Executes a real physical Windows left or right click."""
     try:
+        ensure_interactive_desktop()
+        user32 = ctypes.windll.user32
         if req.button == "right":
-            airos_engine.intent_engine.mouse_ctrl.right_click()
+            user32.mouse_event(0x0008, 0, 0, 0, 0) # MOUSEEVENTF_RIGHTDOWN
+            user32.mouse_event(0x0010, 0, 0, 0, 0) # MOUSEEVENTF_RIGHTUP
         else:
-            airos_engine.intent_engine.mouse_ctrl.left_click()
+            user32.mouse_event(0x0002, 0, 0, 0, 0) # MOUSEEVENTF_LEFTDOWN
+            user32.mouse_event(0x0004, 0, 0, 0, 0) # MOUSEEVENTF_LEFTUP
         return {"success": True, "button": req.button}
     except Exception as e:
         return {"success": False, "error": str(e)}
@@ -399,6 +429,8 @@ async def control_click(req: ClickRequest):
 async def control_hotkey(req: HotkeyRequest):
     """Dispatches native Windows hotkeys (Win+D, Alt+Tab, etc.)."""
     try:
+        ensure_interactive_desktop()
+        pyautogui.FAILSAFE = False
         pyautogui.hotkey(*req.keys)
         return {"success": True, "keys": req.keys}
     except Exception as e:
@@ -425,7 +457,16 @@ async def websocket_telemetry(websocket: WebSocket):
         ws_manager.disconnect(websocket)
 
 
-# Mount static assets directory
+# Mount static assets directory and modern Agent 44 UI
+@app.get("/")
+async def root():
+    """Serves the modern Agent 44 React application."""
+    index_path = os.path.join(STATIC_DIR, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    return JSONResponse({"status": "AirOS backend running", "message": "Run npm run build to generate frontend"})
+
+
 if os.path.exists(STATIC_DIR):
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
     assets_dir = os.path.join(STATIC_DIR, "assets")

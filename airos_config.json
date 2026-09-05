@@ -1,11 +1,11 @@
 {
   "camera": {
-    "enabled": false,
     "device_index": 0,
     "width": 640,
     "height": 480,
     "fps": 30,
-    "mirror": true
+    "mirror": true,
+    "enabled": false
   },
   "mouse": {
     "enabled": true,
@@ -46,7 +46,7 @@
     "circle_min_points": 8
   },
   "modes": {
-    "active_mode": "TRAINING",
+    "active_mode": "SPACE",
     "auto_laser_in_presentation": true
   },
   "appearance": {

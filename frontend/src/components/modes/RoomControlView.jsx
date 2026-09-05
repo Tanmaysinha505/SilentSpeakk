@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { RoomCanvas } from '../scene/RoomCanvas';
 import { PIPCameraFeed } from '../camera/PIPCameraFeed';
+import { GestureStatusPanel } from '../hud/GestureStatusPanel';
+import { VoiceControlBtn } from '../voice/VoiceControlBtn';
 import { useCommandStore } from '../../store/useCommandStore';
 import { useAgent44Store } from '../../store/useAgent44Store';
+import { useAuthStore } from '../../store/useAuthStore';
 import {
   Lightbulb,
   Fan,
@@ -19,7 +22,13 @@ import {
   Hand,
   Sun,
   Wind,
-  Thermometer
+  Thermometer,
+  Bell,
+  Cpu,
+  Droplets,
+  Activity,
+  Layers,
+  ShieldAlert
 } from 'lucide-react';
 
 const CAMERA_PRESETS = [
@@ -31,50 +40,132 @@ const CAMERA_PRESETS = [
   { id: 'TOP_DOWN', label: 'Top' },
 ];
 
+const ROOM_OPTIONS = [
+  { id: 'room1', name: 'Master Room', icon: '🏠', isHardware: true },
+  { id: 'room2', name: 'Living Room', icon: '🛋️', isHardware: false },
+  { id: 'room3', name: 'Study Room', icon: '📚', isHardware: false },
+  { id: 'room4', name: 'Guest Room', icon: '🛏️', isHardware: false },
+];
+
 export function RoomControlView({ onOpenLearner }) {
-  const light = useCommandStore((s) => s.light);
-  const fan = useCommandStore((s) => s.fan);
-  const door = useCommandStore((s) => s.door);
-  const tv = useCommandStore((s) => s.tv);
-  const blinds = useCommandStore((s) => s.blinds || { open: true });
-  const ac = useCommandStore((s) => s.ac || { on: true, temp: 21 });
+  const currentUser = useAuthStore((s) => s.currentUser);
+  const isGuest = currentUser?.role === 'guest';
+  const activeRoomId = useCommandStore((s) => s.activeRoomId || 'room1');
+  const setActiveRoom = useCommandStore((s) => s.setActiveRoom);
+  const rooms = useCommandStore((s) => s.rooms);
+  const activeRoom = rooms[activeRoomId] || rooms.room1;
+
+  const light = activeRoom.light;
+  const fan = activeRoom.fan;
+  const door = activeRoom.door;
+  const tv = activeRoom.tv;
+  const ac = activeRoom.ac;
+  const buzzer = activeRoom.buzzer;
+  const blinds = activeRoom.blinds;
+  const isMaster = activeRoom.isPhysical;
+
+  const sensors = useCommandStore((s) => s.sensors || { temperature: 29.0, humidity: 58 });
+  const presence = useCommandStore((s) => s.presence || { motionDetected: false });
+
+  const dispatchCommand = useCommandStore((s) => s.dispatchCommand);
   const cameraPreset = useCommandStore((s) => s.cameraPreset);
   const setCameraPreset = useCommandStore((s) => s.setCameraPreset);
-  const dispatchCommand = useCommandStore((s) => s.dispatchCommand);
-
   const confirmedGesture = useAgent44Store((s) => s.tracking.confirmedGesture);
 
   const [isPanelCollapsed, setIsPanelCollapsed] = useState(false);
-  const [showCheatSheet, setShowCheatSheet] = useState(true);
+  const [showCheatSheet, setShowCheatSheet] = useState(false);
 
   return (
     <div className="room-control-fullscreen-container">
-      {/* 1. Master React Three Fiber 3D Canvas */}
+      {/* 1. Master React Three Fiber 3D Canvas (Full Screen Center Focus) */}
       <RoomCanvas />
 
-      {/* 2. Floating Live PIP Camera HUD (Shows user's hand & skeleton in real time) */}
-      <PIPCameraFeed />
+      {/* 2. Left HUD Column: Neural Gesture Status + Live Hand Sensor Camera */}
+      <div className="agent44-left-hud-column">
+        <GestureStatusPanel />
+        <PIPCameraFeed />
+      </div>
 
-      {/* 3. Responsive 3D Object Status Bar & Gesture Guide */}
-      <div className={`room-status-overlay ${isPanelCollapsed ? 'collapsed' : ''}`} aria-label="3D Room Object States">
-        <div className="status-overlay-header">
+      {/* 3. Top Floating Room Switcher & Telemetry Strip */}
+      <div className="room-top-nav-bar">
+        <div className="multiroom-switch-strip">
+          {ROOM_OPTIONS.map((r) => (
+            <button
+              key={r.id}
+              className={`room-tab-pill ${activeRoomId === r.id ? 'active' : ''} ${r.isHardware ? 'hw-pill' : ''}`}
+              onClick={() => setActiveRoom(r.id)}
+            >
+              <span className="room-tab-icon">{r.icon}</span>
+              <span className="room-tab-name">{r.name}</span>
+              {r.isHardware && <span className="hw-mini-tag">HW</span>}
+            </button>
+          ))}
+        </div>
+
+        {isMaster ? (
+          <div className="hw-connection-badge" title="Master Bedroom connected to ESP32 on GPIO 2, 25, 26, 33">
+            <Cpu size={13} className="text-emerald animate-pulse" />
+            <span>ESP32 HW</span>
+          </div>
+        ) : (
+          <div className="digital-twin-badge" title="Independent simulated digital twin room">
+            <Layers size={13} className="text-cyan" />
+            <span>DIGITAL TWIN</span>
+          </div>
+        )}
+
+        <div className="telemetry-chips-row">
+          <div className="telemetry-chip">
+            <Thermometer size={12} className="text-amber" />
+            <span className="chip-label">TEMP:</span>
+            <span className="chip-val text-amber">
+              {isMaster ? `${sensors.temperature}°C` : `${ac.temp}°C`}
+            </span>
+          </div>
+
+          {isMaster && (
+            <>
+              <div className="telemetry-chip">
+                <Droplets size={12} className="text-cyan" />
+                <span className="chip-label">HUMIDITY:</span>
+                <span className="chip-val text-cyan">{sensors.humidity}%</span>
+              </div>
+
+              <div className="telemetry-chip">
+                <Activity size={12} className={presence.motionDetected ? 'text-emerald' : 'text-muted'} />
+                <span className="chip-label">PIR:</span>
+                <span className={`chip-val ${presence.motionDetected ? 'text-emerald' : 'text-muted'}`}>
+                  {presence.motionDetected ? 'ACTIVE' : 'IDLE'}
+                </span>
+              </div>
+            </>
+          )}
+
+          {/* Voice Command Button in Top Bar */}
+          <VoiceControlBtn variant="room-bar" />
+        </div>
+      </div>
+
+      {/* 4. Right Compact Room Controls Overlay */}
+      <div className={`room-right-controls-panel ${isPanelCollapsed ? 'collapsed' : ''}`} aria-label="Room Controls">
+        <div className="panel-header-row">
           <div className="title-box">
-            <Sliders size={14} className="text-cyan" />
-            <span>3D ROOM STATUS & GESTURES</span>
+            <Sliders size={13} className="text-cyan" />
+            <span>{activeRoom.name.toUpperCase()}</span>
           </div>
 
           <div className="header-actions-box">
             <button
-              className="panel-action-btn"
+              className={`panel-action-btn ${showCheatSheet ? 'active' : ''}`}
               onClick={() => setShowCheatSheet(!showCheatSheet)}
-              title={showCheatSheet ? 'Hide Gesture Guide' : 'Show Gesture Guide'}
+              title="Toggle Gesture Guide"
             >
-              <HelpCircle size={14} className="text-cyan" />
+              <HelpCircle size={13} className="text-cyan" />
             </button>
             <button
               className="panel-action-btn"
               onClick={onOpenLearner}
-              title="Teach gesture in Room Control mode"
+              title="Teach gesture in current mode"
             >
               <GraduationCap size={13} />
             </button>
@@ -83,231 +174,218 @@ export function RoomControlView({ onOpenLearner }) {
               onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}
               title={isPanelCollapsed ? 'Expand panel' : 'Collapse panel'}
             >
-              {isPanelCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+              {isPanelCollapsed ? <ChevronDown size={13} /> : <ChevronUp size={13} />}
             </button>
           </div>
         </div>
 
         {!isPanelCollapsed && (
-          <>
-            {/* Gesture Quick Reference Guide Banner */}
+          <div className="panel-scroll-content">
+            {/* Guest Hardware Notification Banner */}
+            {isGuest && isMaster && (
+              <div className="guest-hw-notice">
+                <ShieldAlert size={13} className="text-amber" />
+                <span>Guest Mode: Master Room hardware is read-only</span>
+              </div>
+            )}
+
+            {/* Gesture Guide Accordion */}
             {showCheatSheet && (
               <div className="room-cheat-sheet">
                 <div className="cheat-sheet-title">
-                  <Hand size={12} className="text-cyan" />
-                  <span>GESTURE CONTROL CHEAT SHEET:</span>
+                  <Hand size={11} className="text-cyan" />
+                  <span>GESTURE GUIDE:</span>
                 </div>
                 <div className="cheat-sheet-items">
-                  <div className="cheat-item">✋ <strong>Open Palm</strong> ➔ Light ON</div>
+                  <div className="cheat-item">✋ <strong>Palm</strong> ➔ Light ON</div>
                   <div className="cheat-item">✊ <strong>Fist</strong> ➔ Light OFF</div>
                   <div className="cheat-item">☝️ <strong>Point Up</strong> ➔ Fan ON</div>
                   <div className="cheat-item">👇 <strong>Point Down</strong> ➔ Fan OFF</div>
-                  <div className="cheat-item">👍 <strong>Thumb Up</strong> ➔ Door OPEN</div>
-                  <div className="cheat-item">👎 <strong>Thumb Down</strong> ➔ Door CLOSE</div>
-                  <div className="cheat-item">✌️ <strong>Peace / Victory</strong> ➔ TV Power</div>
+                  <div className="cheat-item">👍 <strong>Thumb Up</strong> ➔ Buzzer ON</div>
+                  <div className="cheat-item">👎 <strong>Thumb Down</strong> ➔ Buzzer OFF</div>
+                  <div className="cheat-item">👌 <strong>OK Sign</strong> ➔ Door Toggle</div>
+                  <div className="cheat-item">✌️ <strong>Peace</strong> ➔ TV Power</div>
                   <div className="cheat-item">🤘 <strong>Rock On</strong> ➔ Party Mode</div>
                 </div>
               </div>
             )}
 
-            <div className="object-status-grid">
-              {/* 1. Ceiling Light Status */}
-              <div
-                className={`obj-status-card ${light.on ? 'on' : 'off'} ${
-                  confirmedGesture === 'OPEN_PALM' || confirmedGesture === 'CLOSED_FIST' ? 'active-gesture-target' : ''
-                }`}
-              >
+            <div className="compact-obj-grid">
+              {/* 1. Ceiling Light */}
+              <div className={`obj-status-card compact ${light.on ? 'on' : 'off'} ${
+                confirmedGesture === 'OPEN_PALM' || confirmedGesture === 'CLOSED_FIST' ? 'active-gesture-target' : ''
+              }`}>
                 <div className="obj-header">
-                  <Lightbulb size={15} className={light.on ? 'text-amber glow-icon' : 'text-muted'} />
-                  <span className="obj-name">CEILING LIGHT</span>
-                  <span className="device-gesture-hint">✋ Open / ✊ Fist</span>
-                </div>
-                <div className="obj-state-value">
-                  {light.on ? 'ON (POINTLIGHT ACTIVE)' : 'OFF (EXTINGUISHED)'}
+                  <Lightbulb size={14} className={light.on ? 'text-amber glow-icon' : 'text-muted'} />
+                  <span className="obj-name">{isMaster ? 'LIGHT (GPIO 2)' : 'LIGHT'}</span>
+                  <span className="device-gesture-hint">✋ / ✊</span>
                 </div>
                 <div className="obj-quick-btns">
                   <button
                     className={`quick-cmd-btn ${light.on ? 'engaged' : ''}`}
-                    onClick={() => dispatchCommand('LIGHT_ON')}
-                    title="Gesture: ✋ OPEN PALM"
+                    onClick={() => dispatchCommand('LIGHT_ON', { gesture: 'OPEN_PALM' })}
                   >
-                    ✋ ON (Palm)
+                    ✋ ON
                   </button>
                   <button
                     className={`quick-cmd-btn ${!light.on ? 'engaged' : ''}`}
-                    onClick={() => dispatchCommand('LIGHT_OFF')}
-                    title="Gesture: ✊ CLOSED FIST"
+                    onClick={() => dispatchCommand('LIGHT_OFF', { gesture: 'CLOSED_FIST' })}
                   >
-                    ✊ OFF (Fist)
+                    ✊ OFF
                   </button>
                 </div>
               </div>
 
-              {/* 2. Ceiling Fan Status */}
-              <div
-                className={`obj-status-card ${fan.on ? 'on' : 'off'} ${
-                  confirmedGesture === 'INDEX_POINT' || confirmedGesture === 'POINT_DOWN' ? 'active-gesture-target' : ''
-                }`}
-              >
+              {/* 2. Ceiling Fan */}
+              <div className={`obj-status-card compact ${fan.on ? 'on' : 'off'} ${
+                confirmedGesture === 'INDEX_POINT' || confirmedGesture === 'POINT_DOWN' ? 'active-gesture-target' : ''
+              }`}>
                 <div className="obj-header">
-                  <Fan size={15} className={fan.on ? 'text-cyan spin-anim glow-icon' : 'text-muted'} />
-                  <span className="obj-name">CEILING FAN</span>
-                  <span className="device-gesture-hint">☝️ Up / 👇 Down</span>
-                </div>
-                <div className="obj-state-value">
-                  {fan.on ? 'SPINNING (12.0 RAD/S)' : 'STATIONARY'}
+                  <Fan size={14} className={fan.on ? 'text-cyan spin-anim glow-icon' : 'text-muted'} />
+                  <span className="obj-name">FAN</span>
+                  <span className="device-gesture-hint">☝️ / 👇</span>
                 </div>
                 <div className="obj-quick-btns">
                   <button
                     className={`quick-cmd-btn ${fan.on ? 'engaged' : ''}`}
                     onClick={() => dispatchCommand('FAN_ON')}
-                    title="Gesture: ☝️ POINT UP"
                   >
-                    ☝️ ON (Point Up)
+                    ☝️ ON
                   </button>
                   <button
                     className={`quick-cmd-btn ${!fan.on ? 'engaged' : ''}`}
                     onClick={() => dispatchCommand('FAN_OFF')}
-                    title="Gesture: 👇 POINT DOWN"
                   >
-                    👇 OFF (Point Down)
+                    👇 OFF
                   </button>
                 </div>
               </div>
 
-              {/* 3. Smart Entrance Door Status */}
-              <div
-                className={`obj-status-card ${door.open ? 'on' : 'off'} ${
-                  confirmedGesture === 'THUMB_UP' || confirmedGesture === 'THUMB_DOWN' ? 'active-gesture-target' : ''
-                }`}
-              >
+              {/* 3. Smart Door */}
+              <div className={`obj-status-card compact ${door.open ? 'on' : 'off'} ${
+                confirmedGesture === 'OK_SIGN' || confirmedGesture === 'THREE_FINGERS' ? 'active-gesture-target' : ''
+              }`}>
                 <div className="obj-header">
-                  {door.open ? (
-                    <DoorOpen size={15} className="text-emerald glow-icon" />
-                  ) : (
-                    <DoorClosed size={15} className="text-muted" />
-                  )}
-                  <span className="obj-name">SMART ENTRANCE DOOR</span>
-                  <span className="device-gesture-hint">👍 Open / 👎 Close</span>
-                </div>
-                <div className="obj-state-value">
-                  {door.open ? 'OPEN (83° HINGE)' : 'CLOSED & LATCHED'}
+                  {door.open ? <DoorOpen size={14} className="text-emerald glow-icon" /> : <DoorClosed size={14} className="text-muted" />}
+                  <span className="obj-name">{isMaster ? 'DOOR (GPIO 26)' : 'DOOR'}</span>
+                  <span className="device-gesture-hint">👌 OK</span>
                 </div>
                 <div className="obj-quick-btns">
                   <button
-                    className={`quick-cmd-btn ${door.open ? 'engaged' : ''}`}
-                    onClick={() => dispatchCommand('DOOR_OPEN')}
-                    title="Gesture: 👍 THUMBS UP"
+                    className="quick-cmd-btn engaged"
+                    onClick={() => dispatchCommand('DOOR_TOGGLE', { gesture: 'OK_SIGN' })}
                   >
-                    👍 OPEN (Thumb Up)
-                  </button>
-                  <button
-                    className={`quick-cmd-btn ${!door.open ? 'engaged' : ''}`}
-                    onClick={() => dispatchCommand('DOOR_CLOSE')}
-                    title="Gesture: 👎 THUMBS DOWN"
-                  >
-                    👎 CLOSE (Thumb Down)
+                    👌 {door.open ? 'CLOSE' : 'OPEN'}
                   </button>
                 </div>
               </div>
 
-              {/* 4. Smart OLED TV Status */}
-              <div
-                className={`obj-status-card ${tv.on ? 'on' : 'off'} ${
-                  confirmedGesture === 'VICTORY' ? 'active-gesture-target' : ''
-                }`}
-              >
+              {/* 4. Smart OLED TV */}
+              <div className={`obj-status-card compact ${tv.on ? 'on' : 'off'} ${
+                confirmedGesture === 'VICTORY' ? 'active-gesture-target' : ''
+              }`}>
                 <div className="obj-header">
-                  <Tv size={15} className={tv.on ? 'text-purple glow-icon' : 'text-muted'} />
-                  <span className="obj-name">SMART OLED TV</span>
-                  <span className="device-gesture-hint">✌️ Peace / Victory</span>
-                </div>
-                <div className="obj-state-value">
-                  {tv.on ? 'ACTIVE (STREAMING)' : 'STANDBY'}
+                  <Tv size={14} className={tv.on ? 'text-purple glow-icon' : 'text-muted'} />
+                  <span className="obj-name">OLED TV</span>
+                  <span className="device-gesture-hint">✌️ Peace</span>
                 </div>
                 <div className="obj-quick-btns">
                   <button
                     className={`quick-cmd-btn ${tv.on ? 'engaged' : ''}`}
                     onClick={() => dispatchCommand('TV_TOGGLE')}
-                    title="Gesture: ✌️ VICTORY / PEACE"
                   >
-                    ✌️ POWER (Peace)
+                    ✌️ POWER
                   </button>
                   <button
                     className="quick-cmd-btn"
                     onClick={() => dispatchCommand('PARTY_MODE')}
-                    title="Gesture: 🤘 ROCK ON"
                   >
-                    🤘 PARTY (Rock On)
+                    🤘 PARTY
                   </button>
                 </div>
               </div>
 
-              {/* 5. Smart Window Blinds */}
-              <div className={`obj-status-card ${blinds.open ? 'on' : 'off'}`}>
+              {/* 5. Smart AC */}
+              <div className={`obj-status-card compact ${ac.on ? 'on' : 'off'}`}>
                 <div className="obj-header">
-                  <Sun size={15} className={blinds.open ? 'text-amber glow-icon' : 'text-muted'} />
-                  <span className="obj-name">WINDOW BLINDS</span>
-                  <span className="device-gesture-hint">Open / Close</span>
-                </div>
-                <div className="obj-state-value">
-                  {blinds.open ? 'OPEN (DAYLIGHT WASH)' : 'CLOSED (PRIVACY)'}
-                </div>
-                <div className="obj-quick-btns">
-                  <button
-                    className={`quick-cmd-btn ${blinds.open ? 'engaged' : ''}`}
-                    onClick={() => dispatchCommand('BLINDS_OPEN')}
-                  >
-                    OPEN
-                  </button>
-                  <button
-                    className={`quick-cmd-btn ${!blinds.open ? 'engaged' : ''}`}
-                    onClick={() => dispatchCommand('BLINDS_CLOSE')}
-                  >
-                    CLOSE
-                  </button>
-                </div>
-              </div>
-
-              {/* 6. Smart Climate AC */}
-              <div className={`obj-status-card ${ac.on ? 'on' : 'off'}`}>
-                <div className="obj-header">
-                  <Wind size={15} className={ac.on ? 'text-cyan spin-anim glow-icon' : 'text-muted'} />
-                  <span className="obj-name">SMART CLIMATE AC</span>
-                  <span className="device-gesture-hint">{ac.temp}°C Cooling</span>
-                </div>
-                <div className="obj-state-value">
-                  {ac.on ? `ACTIVE COOLING (${ac.temp}°C)` : 'STANDBY (OFF)'}
+                  <Wind size={14} className={ac.on ? 'text-cyan spin-anim glow-icon' : 'text-muted'} />
+                  <span className="obj-name">SMART AC ({ac.temp}°C)</span>
+                  <span className="device-gesture-hint">{ac.autoMode ? '❄️ AUTO' : 'MANUAL'}</span>
                 </div>
                 <div className="obj-quick-btns">
                   <button
                     className={`quick-cmd-btn ${ac.on ? 'engaged' : ''}`}
-                    onClick={() => dispatchCommand('AC_TOGGLE')}
+                    onClick={() => dispatchCommand(ac.on ? 'AC_OFF' : 'AC_ON')}
                   >
-                    {ac.on ? 'POWER OFF' : 'POWER ON'}
+                    {ac.on ? 'OFF' : 'ON'}
                   </button>
                   <button
                     className="quick-cmd-btn"
                     onClick={() => dispatchCommand('TEMP_DOWN')}
-                    title="Lower temperature"
                   >
                     -1°C
                   </button>
                   <button
                     className="quick-cmd-btn"
                     onClick={() => dispatchCommand('TEMP_UP')}
-                    title="Raise temperature"
                   >
                     +1°C
+                  </button>
+                  <button
+                    className={`quick-cmd-btn ${ac.autoMode ? 'engaged' : ''}`}
+                    onClick={() => dispatchCommand('AC_AUTO_TOGGLE')}
+                  >
+                    AUTO
+                  </button>
+                </div>
+              </div>
+
+              {/* 6. Smart Buzzer */}
+              <div className={`obj-status-card compact ${buzzer ? 'on' : 'off'} ${
+                confirmedGesture === 'THUMB_UP' || confirmedGesture === 'THUMB_DOWN' ? 'active-gesture-target' : ''
+              }`}>
+                <div className="obj-header">
+                  <Bell size={14} className={buzzer ? 'text-amber glow-icon' : 'text-muted'} />
+                  <span className="obj-name">{isMaster ? 'BUZZER (GPIO 25)' : 'BUZZER'}</span>
+                  <span className="device-gesture-hint">👍 / 👎</span>
+                </div>
+                <div className="obj-quick-btns">
+                  <button
+                    className={`quick-cmd-btn ${buzzer ? 'engaged' : ''}`}
+                    onClick={() => dispatchCommand('BUZZER_ON', { gesture: 'THUMB_UP' })}
+                  >
+                    👍 ON
+                  </button>
+                  <button
+                    className={`quick-cmd-btn ${!buzzer ? 'engaged' : ''}`}
+                    onClick={() => dispatchCommand('BUZZER_OFF', { gesture: 'THUMB_DOWN' })}
+                  >
+                    👎 OFF
+                  </button>
+                </div>
+              </div>
+
+              {/* 7. Window Blinds */}
+              <div className={`obj-status-card compact ${blinds.open ? 'on' : 'off'}`}>
+                <div className="obj-header">
+                  <Sun size={14} className={blinds.open ? 'text-amber glow-icon' : 'text-muted'} />
+                  <span className="obj-name">BLINDS</span>
+                </div>
+                <div className="obj-quick-btns">
+                  <button
+                    className={`quick-cmd-btn ${blinds.open ? 'engaged' : ''}`}
+                    onClick={() => dispatchCommand('BLINDS_TOGGLE')}
+                  >
+                    {blinds.open ? 'CLOSE' : 'OPEN'}
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Viewpoint Controller */}
+            {/* Viewpoint Camera Strip */}
             <div className="room-camera-strip">
               <span className="cam-strip-label">
-                <Eye size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />
+                <Eye size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} />
                 VIEW:
               </span>
               <div className="cam-btns-row">
@@ -322,7 +400,7 @@ export function RoomControlView({ onOpenLearner }) {
                 ))}
               </div>
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>

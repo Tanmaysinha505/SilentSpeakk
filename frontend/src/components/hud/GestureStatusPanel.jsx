@@ -6,13 +6,16 @@ import {
   Clock,
   Search,
   Activity,
-  Zap
+  Zap,
+  UserCheck,
+  UserX
 } from 'lucide-react';
 import { useAgent44Store } from '../../store/useAgent44Store';
 
 export function GestureStatusPanel() {
   const tracking = useAgent44Store((s) => s.tracking);
   const activeMode = useAgent44Store((s) => s.activeMode);
+  const presence = useAgent44Store((s) => s.presence || { status: 'STANDBY', motionDetected: false });
 
   const displayGesture =
     tracking.status === 'CONFIRMED'

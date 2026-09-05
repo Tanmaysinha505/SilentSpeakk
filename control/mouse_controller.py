@@ -106,8 +106,13 @@ class MouseController:
         py = int(self.current_y)
 
         try:
-            # Fast native Windows cursor update
+            hDesk = self.user32.OpenInputDesktop(0, False, 0x01FF)
+            if hDesk:
+                self.user32.SetThreadDesktop(hDesk)
             self.user32.SetCursorPos(px, py)
+            abs_x = int(px * 65535 / (self.screen_w - 1)) if self.screen_w > 1 else 0
+            abs_y = int(py * 65535 / (self.screen_h - 1)) if self.screen_h > 1 else 0
+            self.user32.mouse_event(0x8001, abs_x, abs_y, 0, 0)
         except Exception:
             pyautogui.moveTo(px, py)
 

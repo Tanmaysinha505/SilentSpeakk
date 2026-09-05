@@ -48,21 +48,21 @@ export const GESTURE_DEFINITIONS = {
     id: 'THUMBS_UP',
     label: 'Thumbs Up',
     icon: 'ThumbsUp',
-    intent: 'DOOR_OPEN',
-    target: 'Smart Entrance Door',
-    description: 'Swing smart door open 80 degrees',
+    intent: 'BUZZER_ON',
+    target: 'Smart Buzzer / Alarm',
+    description: 'Activate IoT Smart Buzzer audio alarm (ESP32)',
     minConfidence: 70,
-    category: 'Access'
+    category: 'Audio'
   },
   THUMBS_DOWN: {
     id: 'THUMBS_DOWN',
     label: 'Thumbs Down',
     icon: 'ThumbsDown',
-    intent: 'DOOR_CLOSE',
-    target: 'Smart Entrance Door',
-    description: 'Close and secure smart door flush with frame',
+    intent: 'BUZZER_OFF',
+    target: 'Smart Buzzer / Mute',
+    description: 'Deactivate IoT Smart Buzzer audio alarm (ESP32)',
     minConfidence: 70,
-    category: 'Access'
+    category: 'Audio'
   },
   VICTORY: {
     id: 'VICTORY',
@@ -83,7 +83,57 @@ export const GESTURE_DEFINITIONS = {
     description: 'Activate smart room party lighting & fan sequence',
     minConfidence: 70,
     category: 'Automation'
-  }
+  },
+  OK_SIGN: {
+    id: 'OK_SIGN',
+    label: 'OK Sign (👌)',
+    icon: 'DoorOpen',
+    intent: 'DOOR_TOGGLE',
+    target: 'Smart Door',
+    description: 'Toggle smart entrance door (Open ➔ Close ➔ Open via Servo)',
+    minConfidence: 65,
+    category: 'Access'
+  },
+  THREE_FINGERS: {
+    id: 'THREE_FINGERS',
+    label: 'Three Fingers Up',
+    icon: 'DoorOpen',
+    intent: 'DOOR_TOGGLE',
+    target: 'Smart Door',
+    description: 'Toggle smart entrance door (Open ➔ Close ➔ Open via Servo)',
+    minConfidence: 65,
+    category: 'Access'
+  },
+  PINCH: {
+    id: 'PINCH',
+    label: 'Pinch (🤏)',
+    icon: 'DoorClosed',
+    intent: 'DOOR_TOGGLE',
+    target: 'Smart Door',
+    description: 'Toggle smart entrance door (Open ➔ Close ➔ Open via Servo)',
+    minConfidence: 65,
+    category: 'Access'
+  },
+  CALL: {
+    id: 'CALL',
+    label: 'Shaka / Call (🤙)',
+    icon: 'DoorClosed',
+    intent: 'DOOR_TOGGLE',
+    target: 'Smart Door',
+    description: 'Toggle smart entrance door (Open ➔ Close ➔ Open via Servo)',
+    minConfidence: 65,
+    category: 'Access'
+  },
+  DOOR_TOGGLE: {
+    id: 'DOOR_TOGGLE',
+    label: 'Door Toggle (Servo)',
+    icon: 'DoorOpen',
+    intent: 'DOOR_TOGGLE',
+    target: 'Smart Door',
+    description: 'Trigger servo motor to toggle smart entrance door',
+    minConfidence: 50,
+    category: 'Access'
+  },
 };
 
 /**

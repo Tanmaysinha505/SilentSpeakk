@@ -5,18 +5,23 @@ import {
   Eye,
   EyeOff,
   Sparkles,
-  Volume2,
-  VolumeX,
-  RotateCcw
+  Cpu,
+  ShieldCheck,
+  User,
+  LogOut
 } from 'lucide-react';
 import { useAgent44Store } from '../../store/useAgent44Store';
+import { useAuthStore } from '../../store/useAuthStore';
+import { VoiceControlBtn } from '../voice/VoiceControlBtn';
 
 export function TopBar({ onOpenSimulator }) {
   const activeMode = useAgent44Store((s) => s.activeMode);
   const tracking = useAgent44Store((s) => s.tracking);
   const toggleLandmarks = useAgent44Store((s) => s.toggleLandmarks);
-  const dispatchRoomCommand = useAgent44Store((s) => s.dispatchRoomCommand);
-  const addToast = useAgent44Store((s) => s.addToast);
+  const currentUser = useAuthStore((s) => s.currentUser);
+  const logout = useAuthStore((s) => s.logout);
+
+  const isAdmin = currentUser?.role === 'admin';
 
   return (
     <header className="agent44-topbar">
@@ -29,22 +34,33 @@ export function TopBar({ onOpenSimulator }) {
           <h1 className="brand-name">
             AGENT <span>44</span>
           </h1>
-          <span className="brand-caption">CONTEXT-AWARE AI GESTURE SYSTEM</span>
+          <span className="brand-caption">CONTEXT-AWARE SMART ROOM & DIGITAL TWIN</span>
         </div>
       </div>
 
-      {/* 2. Current Mode Indicator (Highlighted) */}
+      {/* 2. Active Mode Indicator */}
       <div className="topbar-mode-badge" role="status" aria-label="Current Mode">
-        <span className="mode-label-prefix">CURRENT MODE:</span>
+        <span className="mode-label-prefix">MODE:</span>
         <span className="mode-name-active">{activeMode.replace(/_/g, ' ')}</span>
       </div>
 
-      {/* 3. Camera & Tracking Status */}
+      {/* 3. Hardware & Vision Telemetry Status + User Profile */}
       <div className="topbar-status-group">
+        <div
+          className="status-pill presence-active"
+          title="Physical ESP32 Hardware: Light, Buzzer, Servo Door & DHT11"
+        >
+          <Cpu size={13} className="text-emerald animate-pulse" />
+          <span>ESP32 HARDWARE CONNECTED</span>
+        </div>
+
         <div className={`status-pill ${tracking.cameraActive ? 'online' : 'connecting'}`}>
           <Radio size={13} className={tracking.cameraActive ? 'text-emerald animate-pulse' : 'text-amber'} />
-          <span>{tracking.cameraActive ? 'VISION ENGINE ACTIVE' : 'INITIALIZING VISION...'}</span>
+          <span>{tracking.cameraActive ? 'VISION ACTIVE' : 'INITIALIZING...'}</span>
         </div>
+
+        {/* Lightweight Event-Driven Voice Control */}
+        <VoiceControlBtn />
 
         {/* Landmarks Toggle */}
         <button
@@ -67,16 +83,32 @@ export function TopBar({ onOpenSimulator }) {
           <span>Simulate</span>
         </button>
 
-        {/* Quick Reset Button if in Room Control */}
-        {activeMode === 'ROOM_CONTROL' && (
-          <button
-            className="topbar-icon-btn"
-            onClick={() => dispatchRoomCommand('PARTY_MODE')}
-            title="Party Mode Lighting"
-            aria-label="Toggle Party Mode"
-          >
-            <Sparkles size={15} className="text-purple" />
-          </button>
+        {/* User Role Badge & Logout */}
+        {currentUser && (
+          <div className="topbar-user-section">
+            <div
+              className={`topbar-user-badge ${isAdmin ? 'admin' : 'guest'}`}
+              title={isAdmin ? 'Logged in as Admin (Full Hardware Access)' : 'Logged in as Guest (Simulation Only)'}
+            >
+              {isAdmin ? (
+                <ShieldCheck size={13} className="text-emerald" />
+              ) : (
+                <User size={13} className="text-cyan" />
+              )}
+              <span className="user-role-text">
+                {isAdmin ? 'ADMIN: tanmay' : 'GUEST: guest'}
+              </span>
+            </div>
+
+            <button
+              className="topbar-icon-btn logout-btn"
+              onClick={logout}
+              title="Logout from Agent 44"
+              aria-label="Logout"
+            >
+              <LogOut size={14} className="text-rose" />
+            </button>
+          </div>
         )}
       </div>
     </header>

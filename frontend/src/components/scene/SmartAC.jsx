@@ -9,15 +9,16 @@ import { useCommandStore } from '../../store/useCommandStore';
  * and oscillating airflow louvers.
  */
 export function SmartAC({ position = [2.2, 3.0, -4.4] }) {
-  const ac = useCommandStore((s) => s.ac || { on: true, temp: 21 });
+  const ac = useCommandStore((s) => s.ac || { on: true, temp: 24, autoMode: true });
+  const sensors = useCommandStore((s) => s.sensors || { temperature: 29.0 });
   const louverRef = useRef();
   const displayMeshRef = useRef();
 
   // Instant offline CanvasTexture for the digital LED readout (No external font fetch, no Suspense)
   const { canvas, ctx, texture } = useMemo(() => {
     const c = document.createElement('canvas');
-    c.width = 128;
-    c.height = 64;
+    c.width = 160;
+    c.height = 80;
     const context = c.getContext('2d');
     const tex = new THREE.CanvasTexture(c);
     tex.colorSpace = THREE.SRGBColorSpace;
@@ -27,7 +28,7 @@ export function SmartAC({ position = [2.2, 3.0, -4.4] }) {
   useFrame((state) => {
     if (louverRef.current) {
       if (ac.on) {
-        louverRef.current.rotation.x = -Math.PI / 4 + Math.sin(state.clock.elapsedTime * 2) * 0.15;
+        louverRef.current.rotation.x = -Math.PI / 4 + Math.sin(state.clock.elapsedTime * 2.5) * 0.18;
       } else {
         louverRef.current.rotation.x = 0;
       }
@@ -35,17 +36,31 @@ export function SmartAC({ position = [2.2, 3.0, -4.4] }) {
 
     // Render digital display texture
     if (ctx && texture) {
-      ctx.fillStyle = '#0a0e17';
+      ctx.fillStyle = '#060a12';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       if (ac.on) {
+        // Temperature Readout
         ctx.fillStyle = '#00f3ff';
         ctx.shadowColor = '#00f3ff';
-        ctx.shadowBlur = 10;
-        ctx.font = 'bold 36px monospace';
+        ctx.shadowBlur = 8;
+        ctx.font = 'bold 38px monospace';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(`${ac.temp}°C`, canvas.width / 2, canvas.height / 2);
+        ctx.fillText(`${ac.temp || 24}°C`, canvas.width / 2, canvas.height / 2 - 6);
+
+        // Subtitle / Auto Mode Tag
+        ctx.fillStyle = ac.autoMode ? '#10b981' : '#38bdf8';
+        ctx.shadowBlur = 3;
+        ctx.font = 'bold 14px sans-serif';
+        ctx.fillText(ac.autoMode ? 'AUTO ❄️ COOL' : 'COOLING ACTIVE', canvas.width / 2, canvas.height - 15);
+      } else {
+        ctx.fillStyle = '#334155';
+        ctx.shadowBlur = 0;
+        ctx.font = 'bold 22px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('STANDBY', canvas.width / 2, canvas.height / 2);
       }
       texture.needsUpdate = true;
     }

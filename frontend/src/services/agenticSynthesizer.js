@@ -1,4 +1,4 @@
-import { useAgent44Store } from '../store/useAgent44Store';
+import { useAgent44Store } from '../store/useAgent44Store.js';
 
 /**
  * Agentic AI Sequence-to-Sentence Synthesizer
@@ -13,31 +13,33 @@ class AgenticSynthesizerService {
     this.timer = null;
 
     // LLM API Config (Supports Qwen / Queen / DashScope / OpenRouter / Ollama)
-    this.apiKey = localStorage.getItem('agent44_llm_api_key') || '';
-    this.apiEndpoint = localStorage.getItem('agent44_llm_endpoint') || 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
-    this.modelName = localStorage.getItem('agent44_llm_model') || 'qwen-turbo';
-    this.useApi = localStorage.getItem('agent44_llm_enabled') === 'true';
+    const hasStorage = typeof window !== 'undefined' && window.localStorage;
+    this.apiKey = hasStorage ? (localStorage.getItem('agent44_llm_api_key') || '') : '';
+    this.apiEndpoint = hasStorage ? (localStorage.getItem('agent44_llm_endpoint') || 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions') : 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
+    this.modelName = hasStorage ? (localStorage.getItem('agent44_llm_model') || 'qwen-turbo') : 'qwen-turbo';
+    this.useApi = hasStorage ? (localStorage.getItem('agent44_llm_enabled') === 'true') : false;
 
     // Callbacks
     this.listeners = new Set();
   }
 
   setApiConfig({ apiKey, apiEndpoint, modelName, useApi }) {
+    const hasStorage = typeof window !== 'undefined' && window.localStorage;
     if (apiKey !== undefined) {
       this.apiKey = apiKey;
-      localStorage.setItem('agent44_llm_api_key', apiKey);
+      if (hasStorage) localStorage.setItem('agent44_llm_api_key', apiKey);
     }
     if (apiEndpoint !== undefined) {
       this.apiEndpoint = apiEndpoint;
-      localStorage.setItem('agent44_llm_endpoint', apiEndpoint);
+      if (hasStorage) localStorage.setItem('agent44_llm_endpoint', apiEndpoint);
     }
     if (modelName !== undefined) {
       this.modelName = modelName;
-      localStorage.setItem('agent44_llm_model', modelName);
+      if (hasStorage) localStorage.setItem('agent44_llm_model', modelName);
     }
     if (useApi !== undefined) {
       this.useApi = useApi;
-      localStorage.setItem('agent44_llm_enabled', useApi ? 'true' : 'false');
+      if (hasStorage) localStorage.setItem('agent44_llm_enabled', useApi ? 'true' : 'false');
     }
   }
 
@@ -163,11 +165,14 @@ class AgenticSynthesizerService {
       if (gestures.includes('INDEX_POINT') && gestures.includes('CLOSED_FIST')) {
         return 'Smart room interaction: Turning ceiling light OFF into dim ambient.';
       }
-      if (gestures.includes('THUMB_UP') && gestures.includes('POINT_DOWN')) {
-        return 'Smart access: Opening entrance door 83 degrees.';
+      if (gestures.includes('THUMB_UP') && gestures.includes('OPEN_PALM')) {
+        return 'Smart room interaction: Turning ceiling light and IoT smart buzzer ON.';
+      }
+      if (gestures.includes('THUMB_UP')) {
+        return 'IoT Beacon: Engaging smart buzzer audio alarm.';
       }
       if (gestures.includes('THUMB_DOWN')) {
-        return 'Smart access: Securing entrance door flush with frame.';
+        return 'IoT Beacon: Disabling smart buzzer audio alarm.';
       }
       if (gestures.includes('VICTORY')) {
         return 'Entertainment: Toggling smart OLED television display.';

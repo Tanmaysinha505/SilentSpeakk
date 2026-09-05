@@ -505,23 +505,20 @@ html, body, #root {
    PICTURE-IN-PICTURE (PIP) CAMERA HUD (Room Control Mode)
    ========================================================================== */
 .pip-camera-container {
-  position: absolute;
-  bottom: 120px;
-  left: 20px;
-  width: 250px;
+  position: relative;
+  width: 100%;
   background: var(--bg-glass-card);
   backdrop-filter: blur(20px);
   border: 1px solid var(--border-cyan);
   border-radius: var(--radius-md);
   overflow: hidden;
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7), 0 0 15px rgba(0, 243, 255, 0.2);
-  z-index: 20;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 12px rgba(0, 243, 255, 0.15);
   pointer-events: auto;
   transition: all var(--transition-smooth);
 }
 
 .pip-camera-container.minimized {
-  width: 170px;
+  height: 36px;
 }
 
 .pip-header {
@@ -553,9 +550,15 @@ html, body, #root {
   background: var(--neon-amber);
 }
 
-.pip-status-dot.tracked {
+.pip-status-dot.active {
   background: var(--neon-emerald);
   box-shadow: 0 0 8px var(--neon-emerald);
+}
+
+.pip-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .pip-btn {
@@ -565,6 +568,7 @@ html, body, #root {
   cursor: pointer;
   display: flex;
   align-items: center;
+  padding: 2px;
 }
 
 .pip-btn:hover {
@@ -574,7 +578,7 @@ html, body, #root {
 .pip-video-wrapper {
   position: relative;
   width: 100%;
-  height: 140px;
+  height: 135px;
   background: #000;
 }
 
@@ -585,7 +589,7 @@ html, body, #root {
   transform: scaleX(-1);
 }
 
-.pip-canvas-element {
+.pip-skeleton-canvas {
   position: absolute;
   top: 0;
   left: 0;
@@ -596,20 +600,33 @@ html, body, #root {
   pointer-events: none;
 }
 
+.pip-gesture-badge {
+  position: absolute;
+  bottom: 6px;
+  left: 8px;
+  background: rgba(11, 17, 32, 0.85);
+  border: 1px solid rgba(0, 243, 255, 0.4);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 800;
+  color: #00f3ff;
+}
+
 /* ==========================================================================
    GESTURE STATUS PANEL (Left Floating HUD)
    ========================================================================== */
 .gesture-status-card {
-  position: absolute;
-  top: 76px;
-  left: 20px;
-  width: 290px;
+  position: relative;
+  width: 100%;
   background: var(--bg-glass-card);
   backdrop-filter: blur(20px);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  padding: 14px;
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  box-sizing: border-box;
 }
 
 .status-card-header {
@@ -1504,6 +1521,87 @@ html, body, #root {
   color: #e0f2fe;
 }
 
+/* ==========================================================================
+   PRESENCE-AWARE AGENT ACTIVATION (ESP32 PIR SENSOR)
+   ========================================================================== */
+.status-pill.presence-active {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #a7f3d0;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.25);
+  animation: presencePulse 2.5s infinite alternate;
+}
+
+.status-pill.presence-standby {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #fde68a;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.15);
+}
+
+@keyframes presencePulse {
+  0% { box-shadow: 0 0 8px rgba(16, 185, 129, 0.2); }
+  100% { box-shadow: 0 0 18px rgba(16, 185, 129, 0.5); }
+}
+
+.presence-status-banner {
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 10px;
+  border: 1px solid;
+  transition: all var(--transition-smooth);
+}
+
+.presence-status-banner.active {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(6, 78, 59, 0.2));
+  border-color: rgba(16, 185, 129, 0.4);
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+}
+
+.presence-status-banner.standby {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(120, 53, 15, 0.15));
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.presence-banner-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.presence-banner-sub {
+  font-size: 0.62rem;
+  color: var(--text-secondary);
+  margin-top: 3px;
+}
+
+.presence-pill-badge {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 12px;
+  margin-left: 8px;
+  letter-spacing: 0.04em;
+}
+
+.presence-pill-badge.active {
+  background: rgba(16, 185, 129, 0.2);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
+}
+
+.presence-pill-badge.standby {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fcd34d;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
 /* Action Toasts */
 .action-toasts-container {
   position: absolute;
@@ -1564,311 +1662,7 @@ html, body, #root {
   to { transform: rotate(360deg); }
 }
 
-/* ==========================================================================
-   DESKTOP OS CONTROL MODE STYLES
-   ========================================================================== */
-.desktop-mode-fullscreen-container {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-  background: radial-gradient(circle at 50% 30%, #0f172a 0%, #060910 100%);
-}
 
-.desktop-wallpaper {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-}
-
-.desktop-icons-column {
-  position: absolute;
-  top: 80px;
-  left: 30px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.desktop-icon-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  width: 80px;
-  padding: 8px 4px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.desktop-icon-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(0, 243, 255, 0.3);
-}
-
-.desktop-icon-item span {
-  font-size: 0.68rem;
-  font-family: var(--font-mono);
-  color: #e2e8f0;
-  text-align: center;
-}
-
-.simulated-app-window {
-  position: absolute;
-  top: 140px;
-  left: 180px;
-  width: 520px;
-  background: #080d16;
-  border: 1px solid var(--border-cyan);
-  border-radius: var(--radius-md);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
-  overflow: hidden;
-  animation: window-appear 0.2s ease-out;
-}
-
-@keyframes window-appear {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
-.window-titlebar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  background: #0f172a;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.window-title-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: #fff;
-  font-weight: 700;
-}
-
-.window-controls {
-  display: flex;
-  gap: 6px;
-}
-
-.win-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  padding: 3px;
-  border-radius: 4px;
-}
-
-.win-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-}
-
-.win-btn.win-close:hover {
-  background: rgba(244, 63, 94, 0.3);
-  color: var(--neon-rose);
-}
-
-.window-content {
-  padding: 16px;
-  font-family: var(--font-mono);
-  font-size: 0.74rem;
-  color: #94a3b8;
-  line-height: 1.6;
-}
-
-.terminal-code {
-  color: #38bdf8;
-}
-
-.cursor-blink {
-  animation: blink 1s infinite;
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-
-.desktop-taskbar {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 40px;
-  background: rgba(8, 13, 22, 0.95);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 16px;
-  z-index: 10;
-}
-
-.taskbar-start {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  font-weight: 800;
-  color: #fff;
-}
-
-.taskbar-apps {
-  display: flex;
-  gap: 6px;
-}
-
-.taskbar-app-tab {
-  padding: 4px 12px;
-  border-radius: 4px;
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--text-secondary);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  cursor: pointer;
-}
-
-.taskbar-app-tab.active {
-  background: rgba(0, 243, 255, 0.15);
-  border-color: var(--border-cyan);
-  color: #fff;
-}
-
-.taskbar-status {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  color: var(--text-muted);
-}
-
-.status-separator {
-  color: rgba(255, 255, 255, 0.2);
-}
-
-.touchless-mouse-cursor {
-  position: fixed;
-  pointer-events: none;
-  transform: translate(-4px, -4px);
-  z-index: 999;
-  transition: transform 0.04s ease-out;
-}
-
-.cursor-coords-tag {
-  position: absolute;
-  left: 24px;
-  top: 10px;
-  font-family: var(--font-mono);
-  font-size: 0.58rem;
-  color: var(--neon-cyan);
-  background: rgba(0, 0, 0, 0.7);
-  padding: 1px 4px;
-  border-radius: 3px;
-  white-space: nowrap;
-}
-
-.click-ripple-effect {
-  position: fixed;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 2px solid var(--neon-cyan);
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  animation: ripple-anim 0.4s ease-out forwards;
-  z-index: 998;
-}
-
-.click-ripple-effect.right {
-  border-color: var(--neon-purple);
-}
-
-@keyframes ripple-anim {
-  from { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
-  to { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
-}
-
-.desktop-floating-hud {
-  position: absolute;
-  top: 76px;
-  right: 16px;
-  width: min(340px, calc(100vw - 32px));
-  background: var(--bg-glass-card);
-  backdrop-filter: blur(24px);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  padding: 14px;
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6);
-  z-index: 12;
-}
-
-.desktop-cheat-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.desktop-cheat-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.68rem;
-  background: rgba(15, 23, 42, 0.6);
-  padding: 6px 10px;
-  border-radius: var(--radius-sm);
-}
-
-.cheat-gesture-pill {
-  font-family: var(--font-mono);
-  font-weight: 800;
-  color: var(--neon-cyan);
-  background: rgba(0, 243, 255, 0.1);
-  padding: 2px 6px;
-  border-radius: 4px;
-  white-space: nowrap;
-}
-
-.cheat-arrow {
-  color: var(--text-muted);
-}
-
-.cheat-action {
-  flex: 1;
-  color: #fff;
-}
-
-.quick-test-btn {
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-family: var(--font-mono);
-  font-size: 0.58rem;
-  font-weight: 700;
-  color: var(--text-secondary);
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  cursor: pointer;
-}
-
-.quick-test-btn:hover {
-  background: rgba(255, 255, 255, 0.18);
-  color: #fff;
-}
 
 /* ==========================================================================
    CLASSROOM MODE STYLES (INTROVERT ASSIST & TEACHER HUD)
@@ -2067,3 +1861,758 @@ html, body, #root {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+/* ==========================================================================
+   AI ROOM CONTEXT & OCCUPANCY OBSERVER PANEL
+   ========================================================================== */
+.ai-context-panel {
+  background: linear-gradient(135deg, rgba(10, 15, 29, 0.95), rgba(6, 9, 16, 0.98));
+  border: 1px solid rgba(0, 243, 255, 0.25);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+}
+
+.ai-context-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+
+.ai-context-title-box {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #fff;
+}
+
+/* ==========================================================================
+   SMART ROOM TELEMETRY BAR & HUD STYLES
+/* ==========================================================================
+   SMART ROOM TELEMETRY, LEFT HUD & RIGHT CONTROLS
+   ========================================================================== */
+
+/* Left HUD Column (Top-left stacked Gesture Status + PIP Camera) */
+.agent44-left-hud-column {
+  position: absolute;
+  top: 72px;
+  left: 16px;
+  z-index: 35;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 275px;
+  pointer-events: auto;
+  animation: fadeIn 0.25s ease;
+}
+
+/* Top Floating Navigation & Room Switcher Strip */
+.room-top-nav-bar {
+  position: absolute;
+  top: 72px;
+  left: 305px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(11, 17, 32, 0.88);
+  border: 1px solid rgba(0, 243, 255, 0.3);
+  backdrop-filter: blur(14px);
+  border-radius: var(--radius-md);
+  padding: 5px 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.multiroom-switch-strip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-right: 10px;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.room-tab-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.room-tab-pill:hover {
+  background: rgba(0, 243, 255, 0.15);
+  border-color: rgba(0, 243, 255, 0.35);
+  color: #fff;
+}
+
+.room-tab-pill.active {
+  background: rgba(0, 243, 255, 0.25);
+  border-color: #00f3ff;
+  color: #00f3ff;
+  font-weight: 800;
+  box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+}
+
+.room-tab-pill.hw-pill.active {
+  background: rgba(16, 185, 129, 0.25);
+  border-color: #10b981;
+  color: #6ee7b7;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
+.room-tab-icon {
+  font-size: 0.72rem;
+}
+
+.hw-mini-tag {
+  font-size: 0.5rem;
+  font-weight: 900;
+  background: #10b981;
+  color: #050b14;
+  padding: 1px 3px;
+  border-radius: 3px;
+  margin-left: 2px;
+}
+
+.hw-connection-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #10b981;
+  padding-right: 8px;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.digital-twin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #38bdf8;
+  padding-right: 8px;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.telemetry-chips-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.telemetry-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+.chip-label {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.chip-val {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+/* Right Compact Room Controls Panel */
+.room-right-controls-panel {
+  position: absolute;
+  top: 72px;
+  right: 16px;
+  width: min(295px, calc(100vw - 32px));
+  max-height: calc(100vh - 190px);
+  background: var(--bg-glass-card);
+  backdrop-filter: blur(24px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-sizing: border-box;
+  z-index: 30;
+}
+
+.room-right-controls-panel.collapsed {
+  max-height: 42px;
+  overflow: hidden;
+}
+
+.panel-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--neon-cyan);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 4px;
+}
+
+.panel-scroll-content {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 2px;
+}
+
+.compact-obj-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.obj-status-card.compact {
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.obj-status-card.compact.on {
+  border-color: rgba(0, 243, 255, 0.35);
+  background: rgba(0, 243, 255, 0.06);
+}
+
+.obj-status-card.compact .obj-header {
+  margin-bottom: 4px;
+}
+
+/* ==========================================================================
+   AGENT 44 VOICE CONTROL SYSTEM (WEB SPEECH API HUD)
+   ========================================================================== */
+.voice-control-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.voice-mic-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(0, 243, 255, 0.3);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  backdrop-filter: blur(8px);
+  user-select: none;
+  outline: none;
+  letter-spacing: 0.03em;
+}
+
+.voice-mic-btn:hover {
+  background: rgba(0, 243, 255, 0.15);
+  border-color: rgba(0, 243, 255, 0.7);
+  box-shadow: 0 0 14px rgba(0, 243, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+.voice-mic-btn.listening {
+  background: rgba(244, 63, 94, 0.18);
+  border-color: rgba(244, 63, 94, 0.8);
+  color: #fda4af;
+  box-shadow: 0 0 18px rgba(244, 63, 94, 0.45);
+  animation: voiceGlowPulse 1.5s infinite alternate;
+}
+
+@keyframes voiceGlowPulse {
+  0% { box-shadow: 0 0 8px rgba(244, 63, 94, 0.3); }
+  100% { box-shadow: 0 0 20px rgba(244, 63, 94, 0.7); }
+}
+
+.voice-mic-btn.understood {
+  background: rgba(16, 185, 129, 0.18);
+  border-color: rgba(16, 185, 129, 0.8);
+  color: #6ee7b7;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.35);
+}
+
+.voice-mic-btn.error {
+  background: rgba(244, 63, 94, 0.15);
+  border-color: rgba(244, 63, 94, 0.6);
+  color: #f43f5e;
+}
+
+.voice-btn-label {
+  text-transform: uppercase;
+  font-size: 10.5px;
+}
+
+.voice-listening-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(8, 14, 26, 0.95);
+  border: 1px solid rgba(0, 243, 255, 0.45);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  font-size: 10.5px;
+  font-family: var(--font-sans);
+  color: var(--neon-cyan);
+  white-space: nowrap;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7), 0 0 16px rgba(0, 243, 255, 0.25);
+  z-index: 1000;
+  pointer-events: none;
+  animation: fadeInDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.voice-popover-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.listening-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #f43f5e;
+  box-shadow: 0 0 6px #f43f5e;
+}
+
+.voice-error-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(24, 10, 16, 0.95);
+  border: 1px solid rgba(244, 63, 94, 0.5);
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+  font-size: 10.5px;
+  font-family: var(--font-sans);
+  color: #fda4af;
+  white-space: nowrap;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+  z-index: 1000;
+  pointer-events: none;
+  animation: fadeInDown 0.2s ease;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -4px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* ==========================================================================
+   AGENT 44 AUTHENTICATION & LOGIN UI
+   ========================================================================== */
+.login-fullscreen-wrapper {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, #0e172a 0%, #060910 100%);
+  overflow: hidden;
+}
+
+.login-bg-glow {
+  position: absolute;
+  width: 450px;
+  height: 450px;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.22;
+  pointer-events: none;
+}
+
+.login-bg-glow.glow-cyan {
+  top: 10%;
+  left: 20%;
+  background: #00f3ff;
+}
+
+.login-bg-glow.glow-purple {
+  bottom: 10%;
+  right: 20%;
+  background: #a855f7;
+}
+
+.login-card {
+  position: relative;
+  width: 92%;
+  max-width: 480px;
+  background: rgba(13, 20, 34, 0.92);
+  border: 1px solid rgba(0, 243, 255, 0.35);
+  border-radius: var(--radius-lg);
+  padding: 32px 28px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 25px rgba(0, 243, 255, 0.15);
+  backdrop-filter: blur(20px);
+  animation: fadeInDown 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.login-brand-header {
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.login-brand-orb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(0, 243, 255, 0.12);
+  border: 1px solid rgba(0, 243, 255, 0.4);
+  margin-bottom: 10px;
+  box-shadow: 0 0 16px rgba(0, 243, 255, 0.3);
+}
+
+.login-title {
+  font-family: var(--font-sans);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #ffffff;
+}
+
+.login-title span {
+  color: var(--neon-cyan);
+  text-shadow: 0 0 12px rgba(0, 243, 255, 0.5);
+}
+
+.login-subtitle {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-secondary);
+  letter-spacing: 0.08em;
+  margin-top: 4px;
+}
+
+/* Quick Role Select Cards */
+.login-roles-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.role-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  outline: none;
+}
+
+.role-card:hover {
+  transform: translateY(-2px);
+}
+
+.role-card.admin-card:hover {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.6);
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.25);
+}
+
+.role-card.guest-card:hover {
+  background: rgba(0, 243, 255, 0.1);
+  border-color: rgba(0, 243, 255, 0.6);
+  box-shadow: 0 0 16px rgba(0, 243, 255, 0.25);
+}
+
+.role-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.role-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.role-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.role-title {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.04em;
+}
+
+.role-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.role-badge.hw-badge {
+  background: rgba(16, 185, 129, 0.2);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.role-badge.twin-badge {
+  background: rgba(0, 243, 255, 0.2);
+  color: #7dd3fc;
+  border: 1px solid rgba(0, 243, 255, 0.4);
+}
+
+.role-desc {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.role-quick-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--neon-cyan);
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.role-card.admin-card .role-quick-btn {
+  color: #10b981;
+}
+
+.login-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 14px 0;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.login-divider span {
+  padding: 0 10px;
+}
+
+/* Manual Form */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.input-label {
+  font-size: 11px;
+  font-family: var(--font-sans);
+  color: var(--text-secondary);
+}
+
+.input-field-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 12px;
+  pointer-events: none;
+}
+
+.login-input {
+  width: 100%;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px 8px 36px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.login-input:focus {
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 12px rgba(0, 243, 255, 0.25);
+  background: rgba(15, 23, 42, 0.95);
+}
+
+.login-error-alert {
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(244, 63, 94, 0.15);
+  border: 1px solid rgba(244, 63, 94, 0.4);
+  color: #fda4af;
+  font-size: 11px;
+  font-family: var(--font-sans);
+}
+
+.login-submit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px;
+  background: linear-gradient(135deg, rgba(0, 243, 255, 0.2), rgba(0, 243, 255, 0.05));
+  border: 1px solid rgba(0, 243, 255, 0.5);
+  border-radius: var(--radius-sm);
+  color: #ffffff;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  margin-top: 4px;
+}
+
+.login-submit-btn:hover {
+  background: linear-gradient(135deg, rgba(0, 243, 255, 0.35), rgba(0, 243, 255, 0.15));
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 18px rgba(0, 243, 255, 0.35);
+}
+
+.login-footer {
+  text-align: center;
+  margin-top: 18px;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+}
+
+/* User Badge in TopBar */
+.topbar-user-section {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 4px;
+  padding-left: 6px;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.topbar-user-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.topbar-user-badge.admin {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #6ee7b7;
+}
+
+.topbar-user-badge.guest {
+  background: rgba(0, 243, 255, 0.12);
+  border: 1px solid rgba(0, 243, 255, 0.35);
+  color: #7dd3fc;
+}
+
+.logout-btn:hover {
+  background: rgba(244, 63, 94, 0.18) !important;
+  border-color: rgba(244, 63, 94, 0.6) !important;
+}
+
+/* Guest Hardware Notice inside RoomControlView */
+.guest-hw-notice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: var(--radius-sm);
+  font-size: 10.5px;
+  color: #fcd34d;
+  margin-bottom: 6px;
+}
+
+
+
+

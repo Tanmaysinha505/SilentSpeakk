@@ -8,8 +8,7 @@ import {
   Sliders,
   Sparkles,
   PlusCircle,
-  GraduationCap,
-  Monitor
+  GraduationCap
 } from 'lucide-react';
 import { useAgent44Store } from '../../store/useAgent44Store';
 
@@ -21,14 +20,6 @@ const DEFAULT_MODES = [
     badge: '3D SMART ROOM',
     desc: 'Interactive Three.js Room (Light, Fan, Door, TV)',
     color: '#00f3ff'
-  },
-  {
-    id: 'DESKTOP',
-    name: 'DESKTOP OS',
-    icon: Monitor,
-    badge: 'MOUSE & OS',
-    desc: 'Touchless index cursor, Win+D, left/right clicks',
-    color: '#06b6d4'
   },
   {
     id: 'CLASSROOM',

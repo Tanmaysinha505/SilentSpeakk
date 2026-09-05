@@ -10,6 +10,14 @@ import logging
 import threading
 import webbrowser
 import uvicorn
+import asyncio
+
+# Fix Python 3.14 Windows ProactorEventLoop ConnectionResetError [WinError 10054]
+if sys.platform == 'win32':
+    try:
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    except Exception:
+        pass
 
 # Configure logging
 logging.basicConfig(

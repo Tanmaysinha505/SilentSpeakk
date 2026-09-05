@@ -71,21 +71,30 @@ export function PIPCameraFeed() {
 
             if (results && results.landmarks && results.landmarks.length > 0) {
               setHasHand(true);
-              const handLms = results.landmarks[0];
               if (showSkeleton) {
-                drawSkeletons([handLms]);
+                drawSkeletons(results.landmarks);
               } else {
                 clearCanvas();
               }
 
-              // Update cursor controller with index fingertip coordinate
-              if (handLms[8]) {
-                cursorController.updateFromLandmark(handLms[8]);
+              const activeMode = useAgent44Store.getState().activeMode;
+              let bestGesture = { gesture: 'NONE', confidence: 0 };
+              let bestHandLms = results.landmarks[0];
+
+              for (const lms of results.landmarks) {
+                const res = classifyHandGesture(lms, activeMode);
+                if (res.gesture !== 'NONE' && res.confidence > bestGesture.confidence) {
+                  bestGesture = res;
+                  bestHandLms = lms;
+                }
               }
 
-              const activeMode = useAgent44Store.getState().activeMode;
-              const { gesture, confidence } = classifyHandGesture(handLms, activeMode);
-              gestureProcessor.processFrame(gesture, confidence, handLms, 30);
+              // Update cursor controller with index fingertip coordinate
+              if (bestHandLms[8]) {
+                cursorController.updateFromLandmark(bestHandLms[8]);
+              }
+
+              gestureProcessor.processFrame(bestGesture.gesture, bestGesture.confidence, bestHandLms, 30);
             } else {
               setHasHand(false);
               clearCanvas();
